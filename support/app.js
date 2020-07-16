@@ -1,13 +1,16 @@
 'use strict';
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const fs = require('fs');
-const Conversation = require('watson-developer-cloud/conversation/v1');
-const WatsonConversationSetup = require('./lib/watson-conversation-setup');
+var express = require('express'); // app server
+var bodyParser = require('body-parser'); // parser for post requests
+var AssistantV2 = require('ibm-watson/assistant/v2'); // watson sdk
+//const WatsonConversationSetup = require('./lib/watson-conversation-setup');
+const { IamAuthenticator, BearerTokenAuthenticator } = require('ibm-watson/auth');
 
 var app = express();
+require('./health/health')(app);
 
+// Bootstrap application settings
+app.use(express.static('./public')); // load UI from public folder
 app.use(bodyParser.json());
 
 app.all('/api/message', function (req, res, next) {
@@ -16,92 +19,82 @@ app.all('/api/message', function (req, res, next) {
     next();
 });
 
-let conversationUsername;
-let conversationPassword;
-let conversationUrl;
 
-if (process.env.CONVERSATION_BINDING) {
-  console.log(process.env.CONVERSATION_BINDING);
-  let conversationBinding = process.env.CONVERSATION_BINDING;
-  if (typeof conversationBinding === "string") conversationBinding = JSON.parse(conversationBinding);
-  conversationUsername = conversationBinding.username;
-  conversationPassword = conversationBinding.password;
-  conversationUrl = conversationBinding.url;
-}
-else {
-  conversationUsername = process.env.CONVERSATION_USERNAME;
-  conversationPassword = process.env.CONVERSATION_PASSWORD;
-  conversationUrl = process.env.CONVERSATION_URL;
+// Create the service wrapper
+
+let authenticator;
+if (process.env.ASSISTANT_IAM_APIKEY) {
+  authenticator = new IamAuthenticator({
+    apikey: process.env.ASSISTANT_IAM_APIKEY
+  });
+} else if (process.env.BEARER_TOKEN) {
+  authenticator = new BearerTokenAuthenticator({
+    bearerToken: process.env.BEARER_TOKEN
+  });
 }
 
-var conversation = new Conversation({
-    version_date: Conversation.VERSION_DATE_2017_04_21,
-    username: conversationUsername,
-    password: conversationPassword,
-    url: conversationUrl
+var assistant = new AssistantV2({
+  version: '2019-02-28',
+  authenticator: authenticator,
+  url: process.env.ASSISTANT_URL,
+  disableSslVerification: process.env.DISABLE_SSL_VERIFICATION === 'true' ? true : false
 });
 
-let workspaceID; // workspaceID will be set when the workspace is created or validated.
-const conversationSetup = new WatsonConversationSetup(conversation);
-const workspaceJson = JSON.parse(fs.readFileSync(`${__dirname}/conversation-workspace.json`));
-const conversationSetupParams = { default_name: 'innovate-support', workspace_json: workspaceJson };
-conversationSetup.setupConversationWorkspace(conversationSetupParams, (err, data) => {
-  if (err) {
-    console.log(err);
-  } else {
-    console.log('Watson Assistant is ready!');
-    workspaceID = data;
-  }
-});
-
-app.post('/api/message', function (req, res) {
-    res.header("Content-Type", "application/json");
-    if (!workspaceID) {
-        return res.json({
-            'output': {
-                'text': 'The app has not been configured with a <b>WORKSPACE_ID</b> environment variable. Please refer to the ' + '<a href="https://github.com/watson-developer-cloud/conversation-simple">README</a> documentation on how to set this variable. <br>' + 'Once a workspace has been defined the intents may be imported from ' + '<a href="https://github.com/watson-developer-cloud/conversation-simple/blob/master/training/car_workspace.json">here</a> in order to get a working application.'
-            }
-        });
-    }
-    var payload = {
-        workspace_id: workspaceID,
-        context: req.body.context || {},
-        input: req.body.input || {}
-    };
-    conversation.message(payload, function (err, data) {
-        if (err) {
-            return res.status(err.code || 500).json(err);
-        }
-        return res.json(updateMessage(payload, data));
+// Endpoint to be call from the client side
+app.post('/api/message', function(req, res) {
+  
+  let assistantId = process.env.ASSISTANT_ID || '<assistant-id>';
+  if (!assistantId || assistantId === '<assistant-id>') {
+    return res.json({
+      output: {
+        text:
+          'The app has not been configured with a <b>ASSISTANT_ID</b> environment variable. Please refer to the ' +
+          '<a href="https://github.com/watson-developer-cloud/assistant-simple">README</a> documentation on how to set this variable. <br>' +
+          'Once a workspace has been defined the intents may be imported from ' +
+          '<a href="https://github.com/watson-developer-cloud/assistant-simple/blob/master/training/car_workspace.json">here</a> in order to get a working application.',
+      },
     });
+  }
+
+  var textIn = '';
+
+  if (req.body.input) {
+    textIn = req.body.input.text;
+  }
+
+  var payload = {
+    assistantId: assistantId,
+    sessionId: req.body.session_id,
+    input: {
+      message_type: 'text',
+      text: textIn,
+    },
+  };
+
+  // Send the input to the assistant service
+  assistant.message(payload, function(err, data) {
+    if (err) {
+      const status = err.code !== undefined && err.code > 0 ? err.code : 500;
+      return res.status(status).json(err);
+    }
+
+    return res.json(data);
+  });
 });
 
-/**
- * Updates the response text using the intent confidence
- * @param  {Object} input The request to the Conversation service
- * @param  {Object} response The response from the Conversation service
- * @return {Object}          The response with the updated message
-**/
-
-function updateMessage(input, response) {
-    var responseText = null;
-    if (!response.output) {
-        response.output = {};
-    } else {
-        return response;
+app.get('/api/session', function(req, res) {
+  assistant.createSession(
+    {
+      assistantId: process.env.ASSISTANT_ID || '{assistant_id}',
+    },
+    function(error, response) {
+      if (error) {
+        return res.send(error);
+      } else {
+        return res.send(response);
+      }
     }
-    if (response.intents && response.intents[0]) {
-        var intent = response.intents[0];
-        if (intent.confidence >= 0.75) {
-            responseText = 'I understood your intent was ' + intent.intent;
-        } else if (intent.confidence >= 0.5) {
-            responseText = 'I think your intent was ' + intent.intent;
-        } else {
-            responseText = 'I did not understand your intent';
-        }
-    }
-    response.output.text = responseText;
-    return response;
-}
+  );
+});
 
 module.exports = app;
