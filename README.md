@@ -19,7 +19,23 @@ To test it out, sign up for an account. A process runs periodically to dump rand
 
 ![Screens](doc/source/images/screens-2.png)
 
-## Learning objectives
+## Contents
+
+1. [Learning Objectives](#Learning-Objectives)
+1. [Flow](#Flow)
+1. [Included components](#Included-Components)
+1. [Featured Technologies](#Featured-Technologies) 
+1. [Watch the Video](#Watch-the-Video)
+1. [Setup](#Setup)
+    * [Run it locally](#run-locally)
+    * [Deploy to IBM Cloud the hard way (manual, multi-stage)](#deploy-to-ibm-cloud-the-hard-way)
+    * [Deploy-to-an-Openshift-cluster](#deploy-to-an-openshift-cluster)
+1. [Troubleshooting](#Troubleshooting)
+1. [Learn more](#Learn-more)
+1. [Docs](#Docs)
+1. [License](#License)
+
+## Learning Objectives
 
 When you've completed this Code Pattern, you will understand how to:
 
@@ -46,7 +62,7 @@ When thinking of business capabilities, our imaginary bank will need the followi
 * [IBM Cloud Kubernetes Service](https://console.bluemix.net/docs/containers/): IBM Cloud Kubernetes Service manages highly available apps inside Docker containers and Kubernetes clusters on the IBM Cloud. Users have the option of provisioning either a "vanilla" kubernetes cluster on an Openshift cluster.
 * [Watson Assistant](https://www.ibm.com/cloud/watson-assistant/): Create a chatbot with a program that conducts a conversation via auditory or textual methods.
 
-## Featured technologies
+## Featured Technologies
 
 * [Microservices](https://developer.ibm.com/technologies/microservices/): Collection of fine-grained, loosely coupled services using a lightweight protocol to provide building blocks in modern application composition in the cloud.
 * [Node.js](https://nodejs.org/): An open-source JavaScript run-time environment for executing server-side JavaScript code.
@@ -273,7 +289,7 @@ $ ibmcloud ks cluster-config <YOUR_CLUSTER_NAME>
 Then copy the output and paste it in your terminal
 
 
-### 10. Deploy
+### 9. Deploy
 
 We deploy each microservice using helm. Navigate to the /chart directory for each microservice and run
 
