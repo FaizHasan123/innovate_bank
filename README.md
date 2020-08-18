@@ -26,7 +26,7 @@ When you've completed this Code Pattern, you will understand how to:
 * Break an application down to a set of microservices
 * Create and manage a Kubernetes cluster on IBM Cloud
 * Deploy to a Kubernetes cluster on IBM Cloud
-* Deploy to IBM Cloud Private
+* Deploy to Openshift
 
 ## Flow
 
@@ -43,8 +43,7 @@ When thinking of business capabilities, our imaginary bank will need the followi
 
 ## Included components
 
-* [IBM Cloud Kubernetes Service](https://console.bluemix.net/docs/containers/): IBM Cloud Kubernetes Service manages highly available apps inside Docker containers and Kubernetes clusters on the IBM Cloud.
-* [Microservice Builder](https://www.ibm.com/us-en/marketplace/microclimate): Learn, build, run, and manage applications in a microservices framework.
+* [IBM Cloud Kubernetes Service](https://console.bluemix.net/docs/containers/): IBM Cloud Kubernetes Service manages highly available apps inside Docker containers and Kubernetes clusters on the IBM Cloud. Users have the option of provisioning either a "vanilla" kubernetes cluster on an Openshift cluster.
 * [Watson Assistant](https://www.ibm.com/cloud/watson-assistant/): Create a chatbot with a program that conducts a conversation via auditory or textual methods.
 
 ## Featured technologies
@@ -65,7 +64,7 @@ You have multiple options to setup your own instance:
 
 * [Run it locally](#run-locally)
 * [Deploy to IBM Cloud the hard way (manual, multi-stage)](#deploy-to-ibm-cloud-the-hard-way)
-* [Deploy to IBM Cloud Private](#deploy-to-ibm-cloud-private)
+* [Deploy to an Openshift cluster](#deploy-to-an-openshift-cluster)
 
 ## Run Locally
 
@@ -79,7 +78,7 @@ $ git clone https://github.com/IBM/innovate-digital-bank.git
 
 ### 2. Create an Instance of MongoDB
 
-This code pattern depends on MongoDB as a session and data store. From the [IBM Cloud catalog](https://cloud.ibm.com/catalog), find **Compose for MongoDB** and click create. Give it a name, choose a region, pick the standard pricing plan and click create.
+This code pattern depends on MongoDB as a session and data store. From the [IBM Cloud catalog](https://cloud.ibm.com/catalog), find **MongoDB** and click create. Give it a name, choose a region, pick the standard pricing plan and click create.
 
 **Get your mongo connection string. Almost all your microservices need it; keep it safe!**
 
@@ -223,7 +222,7 @@ You can also add a new namespace by running:
 $ ibmcloud cr namespace-add <NAME>
 ```
 
-From the directory of each microservice, replace the deploy target in ***cli-config.yml*** and in ***/chart/innovate-<MICROSERVICE_NAME>/values.yaml*** with the correct one
+From the directory of each microservice, replace the deploy target in ***/chart/innovate-<MICROSERVICE_NAME>/values.yaml*** with the correct one
 
 For example, from within the **/innovate** folder, navigate into the accounts folder
 
@@ -231,18 +230,12 @@ For example, from within the **/innovate** folder, navigate into the accounts fo
 $ cd accounts
 ```
 
-Next, edit line 58 of [cli-config.yaml](https://github.com/IBM/innovate-digital-bank/blob/master/accounts/cli-config.yml) file. Replace the ***deploy-image-target*** with the correct value.
-
-```
-deploy-image-target: "registry.ng.bluemix.net/amalamine/innovate-accounts"
-```
-
 ![kubectl config](doc/source/images/12.png)
 
 Edit line 6 of the [values.yaml](https://github.com/IBM/innovate-digital-bank/blob/master/accounts/chart/innovate-accounts/values.yaml) file. Replace the ***repository*** with the correct value.
 
 ```
-repository: registry.ng.bluemix.net/amalamine/innovate-accounts
+repository: us.icr.io/innovate_bank_shared/portal
 ```
 
 ![kubectl config](doc/source/images/13.png)
@@ -274,180 +267,29 @@ Finally, edit your .env folder and add your Mongodb connection string
 Run the following command:
 
 ```bash
-$ ibmcloud cs cluster-config <YOUR_CLUSTER_NAME>
+$ ibmcloud ks cluster-config <YOUR_CLUSTER_NAME>
 ```
 
 Then copy the output and paste it in your terminal
 
-### 9. Initialize helm
-
-If you dont have helm installed, see the [Helm Documentation](https://docs.helm.sh/using_helm/#install-helm).
-
-```bash
-$ helm init
-```
 
 ### 10. Deploy
 
-Finally, navigate to each microservice folder, and run the following command
+We deploy each microservice using helm. Navigate to the /chart directory for each microservice and run
 
 ```bash
-$ ibmcloud dev deploy
+$ helm install {service name} {name of directory containing helm files}
+```
+For example, for the portal service, this command would look something like this
+```
+$ helm install portal innovate-portal
 ```
 
 Once done, you'll be able to access the portal on port _30060_ of your cluster's _public IP address_, which you can find under the overview of your cluster on IBM Cloud.
 Or if you are logged in `ibmcloud` cli, you can find your public ip of your worker node by
 
 ```bash
-$ ibmcloud cs workers <name-of-cluster>
-```
-
-# Deploy to IBM Cloud Private
-
-If you have an instance of IBM Cloud Private running, you can follow the steps below to deploy the app. If you'd like to deploy your own instance of ICP, [you can follow this great writeup](https://github.com/IBM/deploy-ibm-cloud-private).
-
-1. [Create a persistent volume](#1-create-a-persistent-volume)
-2. [Create a persistent volume claim](#2-create-a-persistent-volume-claim)
-3. [Create an instance of MongoDB](#3-create-an-instance-of-mongodb)
-4. [Configure your environment variables](#4-configure-your-environment-variables)
-5. [Add your ICP's address to your hosts file](#5-add-your-icps-address-to-your-hosts-file)
-6. [Login to docker](#6-login-to-docker)
-7. [Configure kubectl](#7-configure-kubectl)
-8. [Configure cloudctl](#8-configure-cloudctl)
-9. [Install Helm](#9-install-helm)
-10. [Deploy](#10-deploy)
-
-### 1. Create a persistent volume
-
-This code pattern depends on MongoDB as a session and data store. From ICP's menu, click on Storage > Create persistent volume. Give it a name and a capacity, choose storage type _**Hostpath**_, and add a _**path parameter**_
-
-[More details here](./creating-pv.md)
-
-### 2. Create a persistent volume claim
-
-From ICP's menu, click on **_Storage_** > **_Create Persistent Volume Claim_**. Give it a name and a storage request value.
-
-[More details here](./creating-pvc.md)
-
-### 3. Create an instance of MongoDB
-
-From the catalog, choose MongoDB. Give it a **_Name_**, specify the **_Existing Volume Claim Name_**, and give it a **_password_**.
-
-[More details here](./mongo-db.md)
-
-***Get your mongo connection string; Almost all your microservices need it; keep it safe!***
-
-Your connection string will be in the following format:
-
-```
-mongodb://<USERNAME>:<PASSWORD>@<HOST>:<PORT>/<DATABASE_NAME>
-```
-
-### 4. Configure your environment variables
-
-Each of the 7 microservices must have a _**.env**_ file. An example is already provided within each folder. From the directory of each microservice, copy the example file, rename it to _**.env**_, and fill it with the appropriate values.
-
-For example, from within the **/innovate** folder, navigate into the accounts folder
-
-```bash
-$ cd accounts
-```
-
-Next, copy and rename the _**.env.example**_ folder
-
-```bash
-$ cp .env.example .env
-```
-
-Finally, edit your **.env** folder and add your Mongodb connection string
-
-***Repeat those steps for all microservices. In addition to your mongo url, you may the IP address of your ICP.***
-
-### 5. Add your ICP's address to your hosts file
-
-Add an entry to your /etc/hosts file as follows
-
-```ini
-<YOUR_ICP_IP_ADDRESS> mycluster.icp
-```
-
-### 6. Login to docker
-
-For Mac users, if you are running ICP locally in VM you would also have to add the cluster info to the insecure registry. To do so, go to the Docker icon in the system tray, select **_Preferences_** > **_Daemon_**, and choose to enable experimental features and add cluster to insecure registries list.
-
-![Docker 1](doc/source/images/docker1.png) ![Docker 2](doc/source/images/docker2.png)
-
-```bash
-$ docker login mycluster.icp:8500
-```
-
-### 7. Configure `kubectl`
-
-From your ICP's dashboard, copy the `kubectl` commands under `admin` > `configure client`
-
-![kubectl config](doc/source/images/5.png)
-
-### 8. Configure `cloudctl`
-
-IBM Cloud Private provides a custom CLI, similar to `kubectl`, called `cloudctl`. To find the CLI for your ICP version, navigate to **_Menu_** > **_Command Line Tools_** > **_Cloud Private CLI_** and follow instruction to get `cloudctl` installed.
-
-![cloudctl config](doc/source/images/cloudctl1.png)
-![cloudctl config](doc/source/images/cloudctl2.png)
-
-Once you have `cloudctl` cli installed, log into **ICP**
-
-```bash
-$ cloudctl login -a https://mycluster.icp:8443 -u admin --skip-ssl-validation
-``` 
-
-> NOTE: The default password for the local ICP VM is _admin_.
-
-### 9. Install Helm
-
-If you dont have helm installed, see the [Helm Documentation](https://docs.helm.sh/using_helm/#install-helm).
-
-```bash
-$ helm init
-```
-
-### 10. Deploy
-Finally, navigate to each microservice, and run the following command
-
-```bash
-$ ibmcloud dev deploy
-```
-
-Once the deployment is successfully completed, you can access the portal on port _30060_ of your _ICP's IP address_.
-
-## (Optional) Adding Support with Watson Assistant
-
-The *Support* microservice connects to an instance of Watson Assistant on IBM Cloud to simulate a chat with a virtual support agent. *This is an optional step.* You only need to continue if you'd like to enable the *Support* feature in the app.
-
-1. [Create an instance of Watson Assistant](#1-create-an-instance-of-watson-assistant)
-2. [Get your credentials](#2-get-your-credentials)
-3. [Configure your environment variables](#3-configure-your-environment-variables)
-4. [Deploy](#4-deploy)
-
-### 1. Create an instance of Watson Assistant
-
-From the [IBM Cloud Catalog](https://cloud.ibm.com/login), choose Watson Assistant, and click *Create*.
-
-### 2. Get your credentials
-
-Navigate to the *Credentials* tab and copy your credentials.
-
-![Watson Conversation](doc/source/images/8.png)
-
-### 3. Configure your environment variables
-
-From within the support folder, edit your `.env` to include your newly acquired credentials.
-
-### 4. Deploy
-
-Re-deploy the *Support* microservice, the support feature should now be accessible through the portal.
-
-```bash
-$ ibmcloud dev deploy
+$ ibmcloud ks workers <name-of-cluster>
 ```
 
 ## Troubleshooting
@@ -471,3 +313,4 @@ Additional documentation of all the backend endpoints is available in [DOCS.md](
 This code pattern is licensed under the Apache Software License, Version 2.  Separate third party code objects invoked within this code pattern are licensed by their respective providers pursuant to their own separate licenses. Contributions are subject to the [Developer Certificate of Origin, Version 1.1 (DCO)](https://developercertificate.org/) and the [Apache Software License, Version 2](http://www.apache.org/licenses/LICENSE-2.0.txt).
 
 [Apache Software License (ASL) FAQ](http://www.apache.org/foundation/license-faq.html#WhatDoesItMEAN)
+
