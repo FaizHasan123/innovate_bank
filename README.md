@@ -29,7 +29,7 @@ To test it out, sign up for an account. A process runs periodically to dump rand
 1. [Setup](#Setup)
     * [Run it locally](#run-locally)
     * [Deploy to IBM Cloud the hard way (manual, multi-stage)](#deploy-to-ibm-cloud-the-hard-way)
-    * [Deploy-to-an-Openshift-cluster](#deploy-to-an-openshift-cluster)
+    * [Deploy to an Openshift cluster](#deploy-to-an-openshift-cluster)
 1. [Troubleshooting](#Troubleshooting)
 1. [Learn more](#Learn-more)
 1. [Docs](#Docs)
