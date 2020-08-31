@@ -29,6 +29,7 @@ To test it out, sign up for an account. A process runs periodically to dump rand
 1. [Setup](#Setup)
     * [Run it locally](#run-locally)
     * [Deploy to IBM Cloud on Red Hat OpenShift (manual, multi-stage)](#deploy-to-ibm-cloud-on-red-hat-openshift)
+1. [Troubleshooting](#troubleshooting)
 1. [Learn more](#Learn-more)
 1. [Docs](#Docs)
 1. [License](#License)
