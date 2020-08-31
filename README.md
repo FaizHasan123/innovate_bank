@@ -12,7 +12,7 @@ So here's our attempt:
 
 We’ll take a use-case that has a bit of real-world familiarity to it — A digital bank. Naturally inspired by [Monzo](http://monzo.com/). Let’s call it Innovate.
 
-[A live version deployed on a Kubernetes cluster in IBM Cloud is available for you to try here](http://ibm.biz/digibank).
+[A live version deployed on an Openshift in IBM Cloud is available for you to try here](http://ibm.biz/digibank).
 To test it out, sign up for an account. A process runs periodically to dump randomized transactions and bills for user accounts, so give it a couple of minutes and refresh to see your populated profile.
 
 ![Screens](doc/source/images/screens-1.png)
@@ -22,29 +22,27 @@ To test it out, sign up for an account. A process runs periodically to dump rand
 ## Contents
 
 1. [Learning Objectives](#Learning-Objectives)
-1. [Flow](#Flow)
+1. [Architecture Flow](#Architecture-Flow)
 1. [Included components](#Included-Components)
 1. [Featured Technologies](#Featured-Technologies) 
 1. [Watch the Video](#Watch-the-Video)
 1. [Setup](#Setup)
     * [Run it locally](#run-locally)
-    * [Deploy to IBM Cloud the hard way (manual, multi-stage)](#deploy-to-ibm-cloud-the-hard-way)
-    * [Deploy to an Openshift cluster](#deploy-to-an-openshift-cluster)
-1. [Troubleshooting](#Troubleshooting)
+    * [Deploy to IBM Cloud on Red Hat OpenShift (manual, multi-stage)](#deploy-to-ibm-cloud-on-red-hat-openshift)
 1. [Learn more](#Learn-more)
 1. [Docs](#Docs)
 1. [License](#License)
 
-## Learning Objectives
+
+## Learning objectives
 
 When you've completed this Code Pattern, you will understand how to:
 
 * Break an application down to a set of microservices
-* Create and manage a Kubernetes cluster on IBM Cloud
-* Deploy to a Kubernetes cluster on IBM Cloud
-* Deploy to Openshift
+* Create an Openshift cluster on IBM Cloud
+* Deploy the application on Openshift
 
-## Flow
+## Architecture Flow
 
 When thinking of business capabilities, our imaginary bank will need the following set of microservices:
 
@@ -62,7 +60,7 @@ When thinking of business capabilities, our imaginary bank will need the followi
 * [IBM Cloud Kubernetes Service](https://console.bluemix.net/docs/containers/): IBM Cloud Kubernetes Service manages highly available apps inside Docker containers and Kubernetes clusters on the IBM Cloud. Users have the option of provisioning either a "vanilla" kubernetes cluster on an Openshift cluster.
 * [Watson Assistant](https://www.ibm.com/cloud/watson-assistant/): Create a chatbot with a program that conducts a conversation via auditory or textual methods.
 
-## Featured Technologies
+## Featured technologies
 
 * [Microservices](https://developer.ibm.com/technologies/microservices/): Collection of fine-grained, loosely coupled services using a lightweight protocol to provide building blocks in modern application composition in the cloud.
 * [Node.js](https://nodejs.org/): An open-source JavaScript run-time environment for executing server-side JavaScript code.
@@ -79,10 +77,15 @@ When thinking of business capabilities, our imaginary bank will need the followi
 You have multiple options to setup your own instance:
 
 * [Run it locally](#run-locally)
-* [Deploy to IBM Cloud the hard way (manual, multi-stage)](#deploy-to-ibm-cloud-the-hard-way)
-* [Deploy to an Openshift cluster](#deploy-to-an-openshift-cluster)
+* [Deploy to IBM Cloud on Red Hat OpenShift](#deploy-to-ibm-cloud-on-red-hat-openshift)
+
 
 ## Run Locally
+1. [Clone the repo](#1-clone-the-repo)
+1. [Create an Instance of MongoDB](#2-Create-an-Instance-of-MongoDB)
+1. [Configure your environment variables](#3-Configure-your-environment-variables)
+1. [Configure your environment mode](#4-Configure-your-environment-mode)
+1. [Run](#5-Run)
 
 ### 1. Clone the repo
 
@@ -96,7 +99,7 @@ $ git clone https://github.com/IBM/innovate-digital-bank.git
 
 This code pattern depends on MongoDB as a session and data store. From the [IBM Cloud catalog](https://cloud.ibm.com/catalog), find **MongoDB** and click create. Give it a name, choose a region, pick the standard pricing plan and click create.
 
-**Get your mongo connection string. Almost all your microservices need it; keep it safe!**
+**Get your mongo connection string and TLS. Almost all your microservices need it; keep it safe!**
 
 ![kubectl config](doc/source/images/11.png)
 
@@ -148,20 +151,19 @@ $ npm start
 
 You can now visit `localhost:3100` to access the portal
 
-## Deploy to IBM Cloud the Hard Way
+## Deploy to IBM Cloud on Red Hat OpenShift
 
 > NOTE: This guide requires a paid/upgraded account on IBM Cloud. You **cannot** complete the steps with a free or lite account.
 
 1. [Get the tools](#1-get-the-tools)
-2. [Clone the repo](#2-clone-the-repo)
-3. [Login to IBM Cloud](#3-login-to-ibm-cloud)
-4. [Create a cluster](#4-create-a-cluster-)
-5. [Create an instance of MongoDB](#5-create-an-instance-of-mongodb)
-6. [Configure your deploy target](#6-configure-your-deploy-target)
-7. [Configure your environment variables](#7-configure-your-environment-variables)
-8. [Configure kubectl](#8-configure-kubectl)
-9. [Initialize helm](#9-initialize-helm)
-10. [Deploy](#10-deploy)
+1. [Clone the repo](#2-clone-the-repo)
+1. [Login to IBM Cloud](#3-login-to-ibm-cloud-)
+1. [Create a cluster](#4-create-a-cluster-)
+1. [Create an instance of MongoDB](#5-create-an-instance-of-mongodb)
+1. [Configure your deploy target](#6-configure-your-deploy-target)
+1. [Configure your environment variables](#7-configure-your-environment-variables)
+1. [Configure kubectl](#8-configure-kubectl)
+1. [Deploy](#9-deploy)
 
 ### 1. Get the tools
 
@@ -187,7 +189,7 @@ Clone the `innovate-digital-bank` repository locally. In a terminal, run:
 $ git clone https://github.com/IBM/innovate-digital-bank.git
 ```
 
-### 3. Log into IBM Cloud
+### 3. Login to IBM Cloud
 
 We'll need to log into IBM Cloud through both the [console](https://cloud.ibm.com/) and the terminal.
 
@@ -205,9 +207,9 @@ From the catalog, find **Containers in Kubernetes Clusters** and click create. C
 
 ### 5. Create an instance of MongoDB
 
-This demo depends on MongoDB as a session and data store. From the [catalog](https://cloud.ibm.com/catalog/), find **Compose for MongoDB** and click create. Give it a name, choose a region, pick the standard pricing plan and click create.
+This demo depends on MongoDB as a session and data store. From the [catalog](https://cloud.ibm.com/catalog/), find **Databases for MongoDB** and click create. Give it a name, choose a region, pick the standard pricing plan and click create.
 
-**Get your mongo connection string. Almost all your microservices need it; keep it safe!**
+**Get your mongo connection string and TLS certificate. Almost all your microservices need it; keep it safe!**
 
 ![kubectl config](doc/source/images/11.png)
 
@@ -217,13 +219,13 @@ This demo depends on MongoDB as a session and data store. From the [catalog](htt
 Each of the 7 docker images needs to be pushed to your docker image registry on IBM Cloud. You need to set the correct _**deploy target**_. Depending on the region you've created your cluster in, your URL will be in the following format
 
 ```
-registry.<REGION_ABBREVIATION>.bluemix.net/<YOUR_NAMESPACE>/<YOUR_IMAGE_NAME>
+<REGION_ABBREVIATION>.icr.io/<YOUR_NAMESPACE>/<YOUR_IMAGE_NAME>
 ```
 
-For example, to deploy the accounts microservice to my docker image registry in the US-South region, my **deploy_target** will be:
+For example, to deploy the portal microservice to my docker image registry in the US-South region, my **deploy_target** will be:
 
 ```
-registry.ng.bluemix.net/amalamine/innovate-accounts
+us.icr.io/innovate_bank_shared/portal
 ```
 
 If you need to get your namespace, run:
@@ -262,10 +264,10 @@ repository: us.icr.io/innovate_bank_shared/portal
 
 Each of the 7 microservices must have a _**.env**_ file that stores all credentials. An example is already provided within each folder. From the directory of each microservice, copy the example file, rename it to _**.env**_, and fill it with the appropriate values.
 
-For example, from within the **/innovate** folder, navigate into the accounts folder
+For example, from within the **/innovate** folder, navigate into the portal folder
 
 ```bash
-$ cd accounts
+$ cd portal
 ```
 
 Next, copy and rename the _**.env.example**_ folder
@@ -294,7 +296,7 @@ Then copy the output and paste it in your terminal
 We deploy each microservice using helm. Navigate to the /chart directory for each microservice and run
 
 ```bash
-$ helm install {service name} {name of directory containing helm files}
+$ helm install <service name> <name of directory containing helm files>
 ```
 For example, for the portal service, this command would look something like this
 ```
@@ -329,4 +331,3 @@ Additional documentation of all the backend endpoints is available in [DOCS.md](
 This code pattern is licensed under the Apache Software License, Version 2.  Separate third party code objects invoked within this code pattern are licensed by their respective providers pursuant to their own separate licenses. Contributions are subject to the [Developer Certificate of Origin, Version 1.1 (DCO)](https://developercertificate.org/) and the [Apache Software License, Version 2](http://www.apache.org/licenses/LICENSE-2.0.txt).
 
 [Apache Software License (ASL) FAQ](http://www.apache.org/foundation/license-faq.html#WhatDoesItMEAN)
-

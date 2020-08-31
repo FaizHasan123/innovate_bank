@@ -1,27 +1,36 @@
+/**
+ *
+ * Copyright 2015 IBM Corp. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+​
 'use strict';
-
+​
 var express = require('express'); // app server
 var bodyParser = require('body-parser'); // parser for post requests
 var AssistantV2 = require('ibm-watson/assistant/v2'); // watson sdk
-//const WatsonConversationSetup = require('./lib/watson-conversation-setup');
 const { IamAuthenticator, BearerTokenAuthenticator } = require('ibm-watson/auth');
-
+​
 var app = express();
 require('./health/health')(app);
-
+​
 // Bootstrap application settings
 app.use(express.static('./public')); // load UI from public folder
 app.use(bodyParser.json());
-
-app.all('/api/message', function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "*");
-    next();
-});
-
-
+​
 // Create the service wrapper
-
+​
 let authenticator;
 if (process.env.ASSISTANT_IAM_APIKEY) {
   authenticator = new IamAuthenticator({
@@ -32,17 +41,16 @@ if (process.env.ASSISTANT_IAM_APIKEY) {
     bearerToken: process.env.BEARER_TOKEN
   });
 }
-
+​
 var assistant = new AssistantV2({
   version: '2019-02-28',
   authenticator: authenticator,
   url: process.env.ASSISTANT_URL,
   disableSslVerification: process.env.DISABLE_SSL_VERIFICATION === 'true' ? true : false
 });
-
+​
 // Endpoint to be call from the client side
 app.post('/api/message', function(req, res) {
-  
   let assistantId = process.env.ASSISTANT_ID || '<assistant-id>';
   if (!assistantId || assistantId === '<assistant-id>') {
     return res.json({
@@ -55,13 +63,13 @@ app.post('/api/message', function(req, res) {
       },
     });
   }
-
+​
   var textIn = '';
-
+​
   if (req.body.input) {
     textIn = req.body.input.text;
   }
-
+​
   var payload = {
     assistantId: assistantId,
     sessionId: req.body.session_id,
@@ -70,18 +78,18 @@ app.post('/api/message', function(req, res) {
       text: textIn,
     },
   };
-
+​
   // Send the input to the assistant service
   assistant.message(payload, function(err, data) {
     if (err) {
       const status = err.code !== undefined && err.code > 0 ? err.code : 500;
       return res.status(status).json(err);
     }
-
+​
     return res.json(data);
   });
 });
-
+​
 app.get('/api/session', function(req, res) {
   assistant.createSession(
     {
@@ -96,5 +104,5 @@ app.get('/api/session', function(req, res) {
     }
   );
 });
-
+​
 module.exports = app;

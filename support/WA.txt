@@ -1,0 +1,46 @@
+{
+  "apikey": "QF-PfyBuwHBDICgteR5ZFJEgpfUrl397oo4lZA9LG0Fz",
+  "iam_apikey_description": "Auto-generated for key 6c067cb1-b126-4f46-8275-02c187278611",
+  "iam_apikey_name": "Auto-generated service credentials",
+  "iam_role_crn": "crn:v1:bluemix:public:iam::::serviceRole:Manager",
+  "iam_serviceid_crn": "crn:v1:bluemix:public:iam-identity::a/cf4d3293c4e568223fdb1b408ffce752::serviceid:ServiceId-3163fda7-5838-40ae-8842-c1d6f6aa37ec",
+  "url": "https://api.us-south.assistant.watson.cloud.ibm.com/instances/370b33ff-7834-4639-ad69-3cc868923ff4"
+}
+
+{
+  "name": "innovate",
+  "version": "1.0.0",
+  "description": "Innovate: Digital Bank",
+  "private": true,
+  "engines": {
+    "node": "^6.9.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "start:cluster": "sl-run server/server.js",
+    "debug": "node --debug server/server.js",
+    "build": "npm run build:idt",
+    "idt:build": "node idt.js build",
+    "idt:test": "node idt.js test",
+    "idt:debug": "node idt.js debug",
+    "idt:run": "node idt.js run",
+    "idt:deploy": "node idt.js deploy",
+    "idt:install": "node idt.js install"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "request": "^2.88.2",
+    "strong-supervisor": "^6.2.0",
+    "dotenv": "^8.2.0",
+    "watson-developer-cloud": "^4.0.1"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "chalk": "^4.1.0",
+    "mocha": "^8.1.1",
+    "nyc": "^15.1.0",
+    "prompt-confirm": "^2.0.4",
+    "proxyquire": "^2.1.3"
+  }
+}
