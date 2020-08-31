@@ -157,7 +157,7 @@ You can now visit `localhost:3100` to access the portal
 
 1. [Get the tools](#1-get-the-tools)
 1. [Clone the repo](#2-clone-the-repo)
-1. [Login to IBM Cloud](#3-login-to-ibm-cloud-)
+1. [Login to IBM Cloud](#3-login-to-ibm-cloud)
 1. [Create a cluster](#4-create-a-cluster-)
 1. [Create an instance of MongoDB](#5-create-an-instance-of-mongodb)
 1. [Configure your deploy target](#6-configure-your-deploy-target)
